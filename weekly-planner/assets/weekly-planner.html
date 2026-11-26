@@ -1,0 +1,325 @@
+<title>Weekly Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: a paper week-at-a-glance. Header with week switcher and progress, goals strip, seven day cards, then review and later. */
+:root {
+  --bg: #f7f4ee; --surface: #fffdf9; --fg: #22201c; --muted: #6b665d; --line: #e4ded3;
+  --accent: #2f5d8a; --accent-soft: #e3ecf5; --today: #c2571a; --today-soft: #fbe9dd; --done: #8a857b;
+  --g0: #2f5d8a; --g1: #2e7d5b; --g2: #a2522a; --g3: #7a4c9c; --g4: #8a6d12;
+  --serif: "Fraunces", Georgia, serif; --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161513; --surface: #1e1c19; --fg: #ece8e1; --muted: #a39d92; --line: #34302a;
+  --accent: #8db8e3; --accent-soft: #1f2b38; --today: #f09a5f; --today-soft: #3a2416; --done: #7d786f;
+  --g0: #8db8e3; --g1: #6cc69c; --g2: #e79a70; --g3: #c39ae3; --g4: #d8bb5b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #161513; --surface: #1e1c19; --fg: #ece8e1; --muted: #a39d92; --line: #34302a;
+  --accent: #8db8e3; --accent-soft: #1f2b38; --today: #f09a5f; --today-soft: #3a2416; --done: #7d786f;
+  --g0: #8db8e3; --g1: #6cc69c; --g2: #e79a70; --g3: #c39ae3; --g4: #d8bb5b; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.45;
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)) }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px }
+h1 { font-family: var(--serif); font-weight: 650; font-size: 2rem; margin: 0; letter-spacing: -0.01em }
+h2 { font-size: 0.78rem; margin: 0; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 600 }
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px }
+.sub { color: var(--muted); margin: 4px 0 0 }
+.nav { display: flex; gap: 6px; align-items: center }
+.progress { display: flex; align-items: center; gap: 12px }
+.ring { width: 64px; height: 64px }
+.ring text { font: 600 15px var(--sans); fill: var(--fg) }
+.big { font-family: var(--serif); font-size: 1.15rem }
+.note { padding: 10px 14px; border-radius: 8px; background: var(--today-soft); border: 1px solid var(--line) }
+.goals { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.goal { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gc); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0 }
+.goal b { font-weight: 600; overflow-wrap: anywhere }
+.goal .means { font-size: 0.82rem; color: var(--muted) }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden }
+.bar i { display: block; height: 100%; background: var(--gc); border-radius: 99px }
+.count { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.days { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0 }
+.day.today { border-color: var(--today); box-shadow: 0 0 0 1px var(--today) inset }
+.day.past { opacity: 0.85 }
+.day.off { background: transparent; border-style: dashed }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.day-name { font-family: var(--serif); font-weight: 650; font-size: 1.1rem }
+.day-date { font-size: 0.78rem; color: var(--muted) }
+.badge { font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--today-soft); color: var(--today) }
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px }
+.task { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; padding: 5px 4px; border-radius: 6px }
+.task:hover { background: var(--bg) }
+.task input { margin: 3px 0 0; width: 17px; height: 17px; accent-color: var(--gc, var(--accent)); cursor: pointer }
+.task label { cursor: pointer; overflow-wrap: anywhere; font-size: 0.92rem }
+.task .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gc); margin-right: 6px; vertical-align: 1px }
+.task.done label { color: var(--done); text-decoration: line-through }
+.task .body { min-width: 0; display: grid; gap: 1px }
+.task .mins { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px }
+.task .rolled { font-size: 0.7rem; color: var(--today); margin-left: 4px }
+.task button.x { opacity: 0; border: 0; background: none; color: var(--muted); padding: 0 2px; font-size: 0.9rem }
+.task:hover button.x, .task button.x:focus-visible { opacity: 1 }
+.tail { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--muted) }
+.load { font-variant-numeric: tabular-nums }
+.load.over { color: var(--today); font-weight: 600 }
+.empty-day { font-size: 0.85rem; color: var(--muted); font-style: italic }
+.add { display: grid; grid-template-columns: 1fr auto; gap: 6px }
+.add select { grid-column: 1 / -1 }
+button { font: inherit; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 5px 10px; cursor: pointer }
+button:hover { border-color: var(--accent) }
+button.link { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500 }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600 }
+button:disabled { opacity: 0.45; cursor: default }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+input[type=text], input[type=number], select { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 6px; padding: 5px 8px; min-width: 0 }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px }
+.review dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0 }
+.review dt { color: var(--muted); font-size: 0.85rem }
+.review dd { margin: 0 }
+.later { margin: 0; padding-left: 18px; color: var(--muted) }
+.empty { border: 1px dashed var(--line); border-radius: 10px; padding: 32px; text-align: center; color: var(--muted) }
+.empty code { background: var(--surface); padding: 1px 6px; border-radius: 4px; color: var(--fg) }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0) }
+@media (max-width: 560px) { h1 { font-size: 1.6rem } .days { grid-template-columns: 1fr } }
+</style>
+
+<main>
+  <header class="top">
+    <div>
+      <h1 id="title">Weekly Planner</h1>
+      <p class="sub" id="sub">A week you can actually finish. Tick tasks here; Claude sees them.</p>
+    </div>
+    <div class="progress">
+      <svg class="ring" viewBox="0 0 64 64" role="img" id="ring" aria-label="No tasks yet">
+        <circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="7"/>
+        <circle id="ring-arc" cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" transform="rotate(-90 32 32)" stroke-dasharray="0 170"/>
+        <text x="32" y="37" text-anchor="middle" id="ring-txt">–</text>
+      </svg>
+      <div>
+        <div class="big" id="p-count">0 of 0 done</div>
+        <div class="count" id="p-mins"></div>
+      </div>
+    </div>
+  </header>
+  <nav class="nav" aria-label="Weeks">
+    <button id="prev" aria-label="Previous week">← Earlier</button>
+    <button id="this">This week</button>
+    <button id="next" aria-label="Next week">Later →</button>
+  </nav>
+
+  <div class="note" id="status" hidden></div>
+
+  <div class="empty" id="empty" hidden>
+    <p><strong>No week planned yet.</strong></p>
+    <p>Tell Claude your goals, for example <code>plan my week: ship my portfolio, run 3 times, finish my book. About 90 minutes a day.</code></p>
+  </div>
+
+  <section id="week" hidden style="display:grid;gap:24px">
+    <section aria-labelledby="h-goals" style="display:grid;gap:10px">
+      <h2 id="h-goals">Goals</h2>
+      <div class="goals" id="goals"></div>
+    </section>
+    <section aria-labelledby="h-days" style="display:grid;gap:10px">
+      <h2 id="h-days">Days</h2>
+      <div class="days" id="days"></div>
+    </section>
+    <section class="panel review" id="review" hidden aria-labelledby="h-review">
+      <h2 id="h-review">Week review</h2>
+      <dl id="review-dl"></dl>
+    </section>
+    <section class="panel" id="later-panel" hidden aria-labelledby="h-later">
+      <h2 id="h-later">Later</h2>
+      <ul class="later" id="later"></ul>
+    </section>
+  </section>
+</main>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e };
+  const toast = (m) => { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2400) };
+  const status = (m) => { $('status').textContent = m || ''; $('status').hidden = !m };
+  const DAYN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1) };
+  const isoWeek = (d) => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return `${t.getUTCFullYear()}-W${pad(Math.ceil(((t - y0) / 864e5 + 1) / 7))}` };
+  const hm = (m) => { m = Math.round(m || 0); const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h} h ${r} m` : `${h} h`) : `${r} m` };
+  const fmtDate = (s) => { try { return parse(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) } catch { return s } };
+  const today = ymd(new Date());
+
+  let db = null, canWrite = false, weeks = [], current = null, writing = false;
+
+  function weekDates(w) {
+    const out = []; const start = parse(w.start || today); const mon = new Date(start); mon.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(mon.getDate() + i); out.push(ymd(d)) }
+    return out;
+  }
+  const goalIndex = (w) => Object.fromEntries((w.goals || []).map((g, i) => [g.id, i % 5]));
+
+  async function saveTasks(w, tasks, msg) {
+    if (!db || !canWrite) return;
+    if (writing) { toast('Saving, one moment…'); return }
+    writing = true;
+    try { await db.doc('weeks/' + w.id).update({ tasks, updated: new Date().toISOString() }); if (msg) toast(msg) }
+    catch (e) { toast(e?.code === 'not_granted' || e?.code === 'permission_denied' ? 'You can view this planner but not change it.' : 'Could not save. Try again.') }
+    finally { writing = false }
+  }
+
+  function taskRow(w, t, gi) {
+    const li = el('li', 'task' + (t.done ? ' done' : ''));
+    if (gi[t.goal] != null) li.style.setProperty('--gc', `var(--g${gi[t.goal]})`);
+    const id = `t-${w.id}-${t.id}`.replace(/[^\w-]/g, '_');
+    const cb = el('input'); cb.type = 'checkbox'; cb.id = id; cb.checked = !!t.done; cb.disabled = !canWrite;
+    cb.onchange = () => {
+      const tasks = (w.tasks || []).map(x => x.id === t.id ? { ...x, done: cb.checked, doneAt: cb.checked ? new Date().toISOString() : null } : x);
+      saveTasks(w, tasks, cb.checked ? 'Done. Nice.' : 'Unchecked');
+    };
+    const lab = el('label'); lab.htmlFor = id;
+    if (gi[t.goal] != null) lab.append(el('span', 'dot'));
+    lab.append(document.createTextNode(t.text || 'Untitled task'));
+    if (t.rolled > 0) lab.append(el('span', 'rolled', `↻${t.rolled}`));
+    const meta = el('span', 'mins', t.mins ? hm(t.mins) : '');
+    if (canWrite) {
+      const x = el('button', 'x', '×'); x.setAttribute('aria-label', `Remove "${t.text || 'task'}"`);
+      x.onclick = () => saveTasks(w, (w.tasks || []).filter(y => y.id !== t.id), 'Removed');
+      meta.append(x);
+    }
+    const body = el('div', 'body'); body.append(lab, meta);
+    li.append(cb, body);
+    return li;
+  }
+
+  function addForm(w, date) {
+    const f = el('form', 'add');
+    const inp = el('input'); inp.type = 'text'; inp.placeholder = 'Add a task'; inp.setAttribute('aria-label', `Add a task on ${date}`); inp.maxLength = 140;
+    const b = el('button', null, 'Add'); b.type = 'submit';
+    f.append(inp, b);
+    let sel = null;
+    if ((w.goals || []).length) {
+      sel = el('select'); sel.setAttribute('aria-label', 'Goal');
+      sel.append(new Option('No goal', ''));
+      (w.goals || []).forEach(g => sel.append(new Option(g.title || g.id, g.id)));
+      f.append(sel);
+    }
+    f.onsubmit = (e) => {
+      e.preventDefault(); const text = inp.value.trim(); if (!text) return;
+      const ids = new Set((w.tasks || []).map(t => t.id)); let n = (w.tasks || []).length + 1; while (ids.has('p' + n)) n++;
+      const task = { id: 'p' + n, goal: sel && sel.value ? sel.value : null, day: date, text, mins: 30, done: false, rolled: 0, addedFrom: 'page' };
+      saveTasks(w, [...(w.tasks || []), task], 'Added'); inp.value = '';
+    };
+    return f;
+  }
+
+  function render() {
+    const has = weeks.length > 0;
+    $('empty').hidden = has; $('week').hidden = !has;
+    const idx = weeks.findIndex(w => w.id === current);
+    const w = weeks[idx];
+    $('prev').disabled = idx <= 0; $('next').disabled = idx < 0 || idx >= weeks.length - 1;
+    $('this').disabled = !weeks.some(x => x.id === isoWeek(new Date())) || current === isoWeek(new Date());
+    if (!w) { $('title').textContent = 'Weekly Planner'; ringSet(0, 0, 0, 0); return }
+    const dates = weekDates(w);
+    $('title').textContent = `Week of ${fmtDate(dates[0])}`;
+    $('sub').textContent = w.status === 'reviewed' ? 'Reviewed. Unfinished tasks moved to the next week.' : (dates.includes(today) ? 'This week. Tick tasks here; Claude sees them.' : `${fmtDate(dates[0])} to ${fmtDate(dates[6])}`);
+    const tasks = Array.isArray(w.tasks) ? w.tasks.filter(Boolean) : [];
+    const done = tasks.filter(t => t.done);
+    const mins = tasks.reduce((s, t) => s + (+t.mins || 0), 0), doneMins = done.reduce((s, t) => s + (+t.mins || 0), 0);
+    ringSet(done.length, tasks.length, doneMins, mins);
+
+    const gi = goalIndex(w);
+    const goals = $('goals'); goals.replaceChildren();
+    (w.goals || []).forEach(g => {
+      const gt = tasks.filter(t => t.goal === g.id), gd = gt.filter(t => t.done).length;
+      const card = el('div', 'goal'); card.style.setProperty('--gc', `var(--g${gi[g.id]})`);
+      card.append(el('b', null, g.title || 'Goal'));
+      if (g.done_means) card.append(el('div', 'means', 'Done means: ' + g.done_means));
+      const bar = el('div', 'bar'); bar.setAttribute('role', 'progressbar'); bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(gt.length)); bar.setAttribute('aria-valuenow', String(gd)); bar.setAttribute('aria-label', g.title || 'Goal');
+      const i = el('i'); i.style.width = gt.length ? `${Math.round(100 * gd / gt.length)}%` : '0'; bar.append(i);
+      card.append(bar, el('div', 'count', `${gd} of ${gt.length} task${gt.length === 1 ? '' : 's'} done`));
+      goals.append(card);
+    });
+    if (!(w.goals || []).length) goals.append(el('div', 'count', 'No goals set for this week.'));
+
+    const days = $('days'); days.replaceChildren();
+    const cap = w.capacity || {};
+    dates.forEach((date, i) => {
+      const dt = tasks.filter(t => t.day === date);
+      const c = +cap[date] || 0, off = c === 0 && !dt.length;
+      const card = el('article', 'day' + (date === today ? ' today' : '') + (date < today ? ' past' : '') + (off ? ' off' : ''));
+      const head = el('div', 'day-head');
+      const left = el('div'); left.append(el('span', 'day-name', DAYN[i]), ' ', el('span', 'day-date', fmtDate(date)));
+      head.append(left);
+      if (date === today) head.append(el('span', 'badge', 'Today'));
+      card.append(head);
+      if (dt.length) { const ul = el('ul', 'tasks'); dt.forEach(t => ul.append(taskRow(w, t, gi))); card.append(ul) }
+      else card.append(el('div', 'empty-day', off ? 'Day off' : 'Nothing planned'));
+      const planned = dt.reduce((s, t) => s + (+t.mins || 0), 0);
+      if (c || planned) {
+        const tail = el('div', 'tail');
+        const load = el('span', 'load' + (c && planned > c ? ' over' : ''), c ? `${hm(planned)} of ${hm(c)}` : `${hm(planned)} planned`);
+        tail.append(load, el('span', null, `${dt.filter(t => t.done).length}/${dt.length}`));
+        card.append(tail);
+      }
+      if (canWrite && w.status !== 'reviewed' && date >= today) {
+        const open = el('button', 'link', '+ Add task');
+        open.onclick = () => { const f = addForm(w, date); open.replaceWith(f); f.querySelector('input').focus() };
+        card.append(open);
+      }
+      days.append(card);
+    });
+
+    const r = w.review;
+    $('review').hidden = !r;
+    if (r) {
+      const dl = $('review-dl'); dl.replaceChildren();
+      const row = (k, v) => { if (v == null || v === '') return; dl.append(el('dt', null, k), el('dd', null, String(v))) };
+      row('Done', typeof r.pct === 'number' ? `${r.done ?? done.length} of ${r.total ?? tasks.length} (${r.pct}%)` : null);
+      row('Went well', r.went_well); row('Got in the way', r.got_in_way); row('Change next week', r.change);
+      row('Carried over', Array.isArray(r.rolled) && r.rolled.length ? `${r.rolled.length} task${r.rolled.length > 1 ? 's' : ''}` : null);
+    }
+    const later = Array.isArray(w.later) ? w.later.filter(x => typeof x === 'string' && x) : [];
+    $('later-panel').hidden = !later.length;
+    $('later').replaceChildren(...later.map(x => el('li', null, x)));
+  }
+
+  function ringSet(d, t, dm, tm) {
+    const pct = t ? d / t : 0, L = 2 * Math.PI * 27;
+    $('ring-arc').setAttribute('stroke-dasharray', `${(pct * L).toFixed(1)} ${L.toFixed(1)}`);
+    $('ring-txt').textContent = t ? `${Math.round(pct * 100)}%` : '–';
+    $('ring').setAttribute('aria-label', t ? `${d} of ${t} tasks done` : 'No tasks yet');
+    $('p-count').textContent = `${d} of ${t} done`;
+    $('p-mins').textContent = tm ? `${hm(dm)} of ${hm(tm)} planned` : '';
+  }
+
+  const go = (delta) => { const i = weeks.findIndex(w => w.id === current); const n = weeks[i + delta]; if (n) { current = n.id; render() } };
+  $('prev').onclick = () => go(-1); $('next').onclick = () => go(1);
+  $('this').onclick = () => { current = isoWeek(new Date()); render() };
+
+  render();
+  (async () => {
+    const api = window.claude && window.claude.use ? window.claude.use : null;
+    db = api ? await api('db') : null;
+    if (!db) { status('Open this page in Claude to see your planner.'); $('empty').hidden = false; return }
+    canWrite = true;
+    try { const user = await api('user'); const c = await user?.can?.('data.write'); if (c === false) canWrite = false } catch {}
+    let loaded = false;
+    const timer = setTimeout(() => { if (!loaded) status('Your planner can’t be reached yet. It will appear when the connection returns.') }, 10000);
+    db.collection('weeks').onSnapshot((snap) => {
+      if (!snap.metadata?.fromCache) { loaded = true; clearTimeout(timer); status('') }
+      weeks = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(w => w && w.start).sort((a, b) => String(a.start).localeCompare(String(b.start)));
+      if (!weeks.some(w => w.id === current)) {
+        const now = isoWeek(new Date());
+        const mine = weeks.find(w => w.id === now) || [...weeks].reverse().find(w => w.start <= today) || weeks[0];
+        current = mine ? mine.id : null;
+      }
+      render();
+    }, () => { clearTimeout(timer); status('The planner stopped updating. Reload the page to reconnect.') });
+  })();
+})();
+</script>

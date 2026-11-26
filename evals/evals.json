@@ -1,0 +1,50 @@
+{
+  "skill_name": "weekly-planner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "plan my week: I want to finish the landing page for my side project, go to the gym 3 times, and read 100 pages of Deep Work. I have about an hour on weekday evenings and 3 hours on Saturday, Sunday is family day.",
+      "expected_output": "A Monday-to-Sunday plan with 3 goals, each with a concrete done-means; verb-first tasks of 15-90 min; no tasks on Sunday; each day at or under 70% of its capacity (42 min weekdays, 126 Saturday); gym sessions not on consecutive days; a light day; a totals line; no clarifying questions.",
+      "assertions": [
+        "Asks no questions before giving the plan",
+        "Sunday has no tasks",
+        "No weekday has more than 42 planned minutes",
+        "Every task is 15 to 90 minutes and starts with a verb",
+        "Gym sessions are not on consecutive days",
+        "Ends with a totals line and offers to save"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to get healthier, learn Spanish, launch my Etsy shop, clean my garage and start journaling this week",
+      "expected_output": "Asks at most two questions in one message: time available per day, and asks to pick the top 3 of 5 goals (parking the rest in Later) and/or what done means for 'get healthier'. Does not produce a 5-goal plan.",
+      "assertions": [
+        "Asks at most two questions, in a single message",
+        "Asks the user to choose 3 goals or proposes parking 2 in a Later list",
+        "Does not produce a plan with all 5 goals"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "review my week. Here's what I had:\nMon - [x] Outline blog post (30m) - [x] Run 30m\nTue - [ ] Draft blog post intro (45m)\nWed - [x] Run 30m - [ ] Fix login bug (60m)\nThu - [ ] Draft blog post intro (45m) (already moved once)\nFri - [ ] Run 30m - [ ] Read 30 pages (40m)\nI got sick on Thursday.",
+      "expected_output": "Leads with the numbers (3 done of 7 distinct tasks, or 8 counting the moved one; under 50% either way) and wins first; does not blame; asks the three review questions in one message, skipping 'what got in the way' since illness was given; rolls over the unfinished non-habit tasks, offering shrink/first/drop for the twice-moved blog intro; does not carry the missed run; suggests a smaller next week since completion was under 50%.",
+      "assertions": [
+        "States done count and percentage before anything else",
+        "Does not ask what got in the way (the user said they were sick)",
+        "Does not carry over the missed run as a task",
+        "Offers shrink, schedule first, or drop for the blog intro task",
+        "Recommends a smaller plan next week"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "what's on today? I already did the run btw",
+      "expected_output": "Loads the current week from the dashboard or asks for the pasted list if neither exists; marks the run done; lists today's remaining tasks and up to 3 overdue ones with an offer to move them; short reply.",
+      "assertions": [
+        "Marks the run task done",
+        "Lists only today's unchecked tasks plus at most 3 overdue",
+        "Reply is a few lines, no full-week dump"
+      ]
+    }
+  ]
+}
